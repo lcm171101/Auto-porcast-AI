@@ -4,6 +4,7 @@ from linebot.models import TextSendMessage, MessageEvent, TextMessage
 from linebot.exceptions import InvalidSignatureError
 import os
 from datetime import datetime, timedelta
+from pytrends.request import TrendReq
 
 app = Flask(__name__)
 
@@ -12,7 +13,7 @@ handler = WebhookHandler(os.environ.get("LINE_CHANNEL_SECRET"))
 
 @app.route("/", methods=["GET"])
 def index():
-    return "LINE 熱門話題推播服務運作中"
+    return "LINE 熱門話題推播服務（Google 熱搜）"
 
 @app.route("/trigger", methods=["GET"])
 def trigger_push():
@@ -29,23 +30,8 @@ def trigger_push():
 def push_hot_topics():
     hot_topics = get_hot_topics()
     message = "\n".join([f"{i+1}. {topic}" for i, topic in enumerate(hot_topics)])
-    line_bot_api.push_message(os.environ.get("LINE_TARGET_ID"), TextSendMessage(text=f"【今日熱門話題】\n{message}"))
+    line_bot_api.push_message(os.environ.get("LINE_TARGET_ID"), TextSendMessage(text=f"【今日 Google 熱搜話題】\n{message}"))
     return "OK"
-
-def get_hot_topics():
-    # 模擬「台灣前十大網站」的熱門話題整合
-    return [
-        "Google 熱搜：AI 面試趨勢崛起",
-        "YouTube 熱門：周杰倫新歌登榜首",
-        "Facebook 熱門貼文：選舉假消息澄清潮",
-        "PTT 熱門：太妍大巨蛋演唱會討論破千樓",
-        "Dcard 熱門：畢業季大頭貼回顧潮",
-        "Yahoo 新聞：輝達設台灣總部引爆AI股",
-        "LINE TODAY：三峽國小車禍引政府關注",
-        "ETtoday 熱門：星座配對趣味分析",
-        "Mobile01 討論：電動車補助新規公布",
-        "Instagram 熱門貼文：白沙屯媽祖圖集爆紅"
-    ]
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -63,23 +49,25 @@ def webhook():
 def handle_message(event):
     user_id = getattr(event.source, 'user_id', None)
     group_id = getattr(event.source, 'group_id', None)
-
     text = event.message.text.strip()
-    reply = ""
 
     if text == "今日話題":
         hot_topics = get_hot_topics()
         message = "\n".join([f"{i+1}. {topic}" for i, topic in enumerate(hot_topics)])
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"【今日熱門話題】\n{message}"))
-        return
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"【今日 Google 熱搜話題】\n{message}"))
     else:
-        reply = "收到訊息～\n"
+        reply = "收到訊息\n"
         if user_id:
             reply += f"userId: {user_id}"
         elif group_id:
             reply += f"groupId: {group_id}"
         else:
             reply += "來源不明"
-
         print("[Webhook] 來源ID =>", reply.replace("\n", " | "))
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+
+def get_hot_topics():
+    pytrends = TrendReq(hl='zh-TW', tz=480)
+    trending_searches_df = pytrends.trending_searches(pn='taiwan')
+    top10 = trending_searches_df.head(10)[0].tolist()
+    return [f"[Google 熱搜] {item}" for item in top10]
