@@ -13,7 +13,7 @@ handler = WebhookHandler(os.environ.get("LINE_CHANNEL_SECRET"))
 
 @app.route("/", methods=["GET"])
 def index():
-    return "LINE 熱門話題推播（台灣 Google Trends 修正版）"
+    return "LINE 熱門話題推播服務正常運作中"
 
 @app.route("/trigger", methods=["GET"])
 def trigger_push():
@@ -39,15 +39,22 @@ def webhook():
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
+        print("❌ 驗證失敗")
         abort(400)
+    except Exception as e:
+        print("❌ webhook 內部錯誤：", str(e))
+        abort(500)
     return "OK"
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    text = event.message.text.strip()
-    if text == "今日話題":
-        hot_topics = get_hot_topics()
-        message = "\n".join([f"{i+1}. {topic}" for i, topic in enumerate(hot_topics)])
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"【今日熱門話題】\n{message}"))
-    else:
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請輸入「今日話題」來查詢最新熱門資訊"))
+    try:
+        text = event.message.text.strip()
+        if text == "今日話題":
+            hot_topics = get_hot_topics()
+            message = "\n".join([f"{i+1}. {topic}" for i, topic in enumerate(hot_topics)])
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"【今日熱門話題】\n{message}"))
+        else:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請輸入「今日話題」以取得熱門資訊"))
+    except Exception as e:
+        print("❌ 回覆時發生錯誤：", str(e))
