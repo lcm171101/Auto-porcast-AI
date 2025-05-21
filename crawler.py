@@ -10,13 +10,34 @@ def get_google_trends_tw():
         related = pytrends.related_queries()
         rising = related.get("", {}).get("rising")
 
-        if rising is None or rising.empty:
+        if rising is None or not hasattr(rising, "empty") or rising.empty:
             return ["[Google 熱搜 TW] 暫無資料"]
 
         return [f"[Google 熱搜 TW] {row['query']}" for _, row in rising.head(3).iterrows()]
     except Exception as e:
         print("🔥 Google 熱搜擷取失敗：", e)
         return ["[Google 熱搜 TW] 擷取失敗"]
+
+def get_dcard_hot_titles():
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json"
+        }
+        url = "https://www.dcard.tw/service/api/v2/posts?popular=true&limit=5"
+        resp = requests.get(url, headers=headers, timeout=10)
+
+        if resp.status_code != 200:
+            raise ValueError(f"Dcard 回應碼錯誤：{resp.status_code}")
+
+        if not resp.content.strip():
+            raise ValueError("Dcard 回應為空")
+
+        posts = resp.json()
+        return [f"[Dcard] {p['title']}" for p in posts]
+    except Exception as e:
+        print("🔥 Dcard 擷取失敗：", e)
+        return ["[Dcard] 擷取失敗"]
 
 def get_ptt_hot_titles():
     url = "https://www.ptt.cc/bbs/Gossiping/index.html"
@@ -32,21 +53,6 @@ def get_ptt_hot_titles():
     except Exception as e:
         print("🔥 PTT 擷取失敗：", e)
         return ["[PTT] 擷取失敗"]
-
-def get_dcard_hot_titles():
-    try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        url = "https://www.dcard.tw/service/api/v2/posts?popular=true&limit=5"
-        resp = requests.get(url, headers=headers, timeout=10)
-
-        if not resp.content.strip():  # 空白內容
-            raise ValueError("Dcard response is empty")
-
-        posts = resp.json()
-        return [f"[Dcard] {p['title']}" for p in posts]
-    except Exception as e:
-        print("🔥 Dcard 擷取失敗：", e)
-        return ["[Dcard] 擷取失敗"]
 
 def get_yahoo_hot_news():
     try:
