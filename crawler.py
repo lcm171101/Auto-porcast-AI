@@ -1,18 +1,20 @@
+import requests
+from bs4 import BeautifulSoup
+import feedparser
 from pytrends.request import TrendReq
 
 def get_google_trends_tw():
     pytrends = TrendReq(hl='zh-TW', tz=480)
-    kw_list = [""]  # 空字串避免 keyword 限制
+    kw_list = [""]
     pytrends.build_payload(kw_list=kw_list, geo='TW')
-    trending = pytrends.related_queries()[""]["rising"]  # 熱門上升關鍵字
-    if trending is not None:
-        return [f"[Google 熱搜 TW] {row['query']}" for _, row in trending.head(3).iterrows()]
-    return []
-
-
-import requests
-from bs4 import BeautifulSoup
-import feedparser
+    try:
+        queries = pytrends.related_queries()
+        rising = queries.get("", {}).get("rising")
+        if rising is not None:
+            return [f"[Google 熱搜 TW] {row['query']}" for _, row in rising.head(3).iterrows()]
+    except Exception as e:
+        print("🔥 Google 熱搜擷取失敗：", e)
+    return ["[Google 熱搜 TW] 暫無資料"]
 
 def get_ptt_hot_titles():
     url = "https://www.ptt.cc/bbs/Gossiping/index.html"
