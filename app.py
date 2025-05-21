@@ -19,7 +19,7 @@ def trigger_push():
     hour = taiwan_now.hour
     minute = taiwan_now.minute
 
-    if hour == 11 and 0 <= minute <= 10:
+    if hour == 11 and 0 <= minute <= 50000:
         return push_hot_topics()
     else:
         return f"目前時間 {taiwan_now.strftime('%H:%M')}，非觸發推播時段（每日 11:00～11:10），請稍後再試。"
