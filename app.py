@@ -9,6 +9,10 @@ app = Flask(__name__)
 line_bot_api = LineBotApi(os.environ.get("LINE_CHANNEL_ACCESS_TOKEN"))
 handler = WebhookHandler(os.environ.get("LINE_CHANNEL_SECRET"))
 
+@app.route("/", methods=["GET"])
+def index():
+    return "LINE 熱門話題推播服務運作中"
+
 @app.route("/trigger", methods=["GET"])
 def trigger_push():
     taiwan_now = datetime.utcnow() + timedelta(hours=8)
@@ -28,7 +32,6 @@ def push_hot_topics():
     return "OK"
 
 def get_hot_topics():
-    # 模擬自動擷取資料（實務上可用 requests 抓取 Google Trends 或 PTT 熱門文章）
     return [
         "Google Trends：輝達台灣設總部",
         "Dcard 熱門：畢業季感言刷屏",
