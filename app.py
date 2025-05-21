@@ -60,17 +60,25 @@ def webhook():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    source = event.source
-    user_id = getattr(source, 'user_id', None)
-    group_id = getattr(source, 'group_id', None)
+    user_id = getattr(event.source, 'user_id', None)
+    group_id = getattr(event.source, 'group_id', None)
 
-    reply = "收到訊息！\n"
-    if user_id:
-        reply += f"userId: {user_id}"
-    elif group_id:
-        reply += f"groupId: {group_id}"
+    text = event.message.text.strip()
+    reply = ""
+
+    if text == "今日話題":
+        hot_topics = get_hot_topics()
+        message = "\n".join([f"{i+1}. {topic}" for i, topic in enumerate(hot_topics)])
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"【今日熱門話題】\n{message}"))
+        return
     else:
-        reply += "無法識別來源。"
+        reply = "收到訊息～\n"
+        if user_id:
+            reply += f"userId: {user_id}"
+        elif group_id:
+            reply += f"groupId: {group_id}"
+        else:
+            reply += "來源不明"
 
-    print("[Webhook 訊息] 來源:", reply.replace("\n", " | "))  # 印出到 Render logs
-    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+        print("[Webhook] 來源ID =>", reply.replace("\n", " | "))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
