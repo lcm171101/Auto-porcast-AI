@@ -1,6 +1,7 @@
-from flask import Flask, request
+from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
-from linebot.models import TextSendMessage
+from linebot.models import TextSendMessage, MessageEvent, TextMessage
+from linebot.exceptions import InvalidSignatureError
 import os
 from datetime import datetime, timedelta
 
@@ -19,7 +20,7 @@ def trigger_push():
     hour = taiwan_now.hour
     minute = taiwan_now.minute
 
-    if hour == 11 and 0 <= minute <= 50000:
+    if hour == 11 and 0 <= minute <= 10:
         return push_hot_topics()
     else:
         return f"目前時間 {taiwan_now.strftime('%H:%M')}，非觸發推播時段（每日 11:00～11:10），請稍後再試。"
@@ -45,5 +46,31 @@ def get_hot_topics():
         "論壇綜合：罷免影片引爆評論潮"
     ]
 
-if __name__ == "__main__":
-    app.run()
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    signature = request.headers.get("X-Line-Signature")
+    body = request.get_data(as_text=True)
+
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+
+    return "OK"
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    source = event.source
+    user_id = getattr(source, 'user_id', None)
+    group_id = getattr(source, 'group_id', None)
+
+    reply = "收到訊息！\n"
+    if user_id:
+        reply += f"userId: {user_id}"
+    elif group_id:
+        reply += f"groupId: {group_id}"
+    else:
+        reply += "無法識別來源。"
+
+    print("[Webhook 訊息] 來源:", reply.replace("\n", " | "))  # 印出到 Render logs
+    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
