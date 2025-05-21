@@ -35,8 +35,13 @@ def get_ptt_hot_titles():
 
 def get_dcard_hot_titles():
     try:
+        headers = {"User-Agent": "Mozilla/5.0"}
         url = "https://www.dcard.tw/service/api/v2/posts?popular=true&limit=5"
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, headers=headers, timeout=10)
+
+        if not resp.content.strip():  # 空白內容
+            raise ValueError("Dcard response is empty")
+
         posts = resp.json()
         return [f"[Dcard] {p['title']}" for p in posts]
     except Exception as e:
