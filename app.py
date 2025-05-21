@@ -33,17 +33,18 @@ def push_hot_topics():
     return "OK"
 
 def get_hot_topics():
+    # 模擬「台灣前十大網站」的熱門話題整合
     return [
-        "Google Trends：輝達台灣設總部",
-        "Dcard 熱門：畢業季感言刷屏",
-        "PTT：太妍大巨蛋演唱會熱烈討論",
-        "YouTube：世壯運影片爆紅",
-        "LINE TODAY：三峽車禍關注",
-        "Facebook：貴婦奈奈返台懺悔文",
-        "Instagram：白沙屯媽祖圖集洗版",
-        "新聞媒體：核電退役討論白熱化",
-        "Twitter/X：剴剴案引全球關注",
-        "論壇綜合：罷免影片引爆評論潮"
+        "Google 熱搜：AI 面試趨勢崛起",
+        "YouTube 熱門：周杰倫新歌登榜首",
+        "Facebook 熱門貼文：選舉假消息澄清潮",
+        "PTT 熱門：太妍大巨蛋演唱會討論破千樓",
+        "Dcard 熱門：畢業季大頭貼回顧潮",
+        "Yahoo 新聞：輝達設台灣總部引爆AI股",
+        "LINE TODAY：三峽國小車禍引政府關注",
+        "ETtoday 熱門：星座配對趣味分析",
+        "Mobile01 討論：電動車補助新規公布",
+        "Instagram 熱門貼文：白沙屯媽祖圖集爆紅"
     ]
 
 @app.route("/webhook", methods=["POST"])
