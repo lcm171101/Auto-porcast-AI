@@ -5,3 +5,4 @@ pytrends
 feedparser
 beautifulsoup4
 requests
+pandas

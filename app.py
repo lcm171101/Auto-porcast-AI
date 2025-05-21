@@ -13,7 +13,7 @@ handler = WebhookHandler(os.environ.get("LINE_CHANNEL_SECRET"))
 
 @app.route("/", methods=["GET"])
 def index():
-    return "LINE 熱門話題爬蟲整合服務"
+    return "LINE 熱門話題推播（台灣 Google Trends 修正版）"
 
 @app.route("/trigger", methods=["GET"])
 def trigger_push():

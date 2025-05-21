@@ -1,7 +1,18 @@
+from pytrends.request import TrendReq
+
+def get_google_trends_tw():
+    pytrends = TrendReq(hl='zh-TW', tz=480)
+    kw_list = [""]  # 空字串避免 keyword 限制
+    pytrends.build_payload(kw_list=kw_list, geo='TW')
+    trending = pytrends.related_queries()[""]["rising"]  # 熱門上升關鍵字
+    if trending is not None:
+        return [f"[Google 熱搜 TW] {row['query']}" for _, row in trending.head(3).iterrows()]
+    return []
+
+
 import requests
 from bs4 import BeautifulSoup
 import feedparser
-from pytrends.request import TrendReq
 
 def get_ptt_hot_titles():
     url = "https://www.ptt.cc/bbs/Gossiping/index.html"
@@ -25,11 +36,5 @@ def get_yahoo_hot_news():
     feed = feedparser.parse(rss_url)
     return [f"[Yahoo] {entry.title}" for entry in feed.entries[:3]]
 
-def get_google_trends():
-    pytrends = TrendReq(hl='zh-TW', tz=480)
-    trending_searches_df = pytrends.trending_searches(pn='taiwan')
-    top10 = trending_searches_df.head(3)[0].tolist()
-    return [f"[Google 熱搜] {item}" for item in top10]
-
 def get_hot_topics():
-    return get_google_trends() + get_ptt_hot_titles() + get_dcard_hot_titles() + get_yahoo_hot_news()
+    return get_google_trends_tw() + get_ptt_hot_titles() + get_dcard_hot_titles() + get_yahoo_hot_news()
