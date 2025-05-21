@@ -13,7 +13,7 @@ handler = WebhookHandler(os.environ.get("LINE_CHANNEL_SECRET"))
 
 @app.route("/", methods=["GET"])
 def index():
-    return "LINE 熱門話題推播服務正常運作中"
+    return "LINE 熱門話題推播：最終防呆穩定版"
 
 @app.route("/trigger", methods=["GET"])
 def trigger_push():
@@ -27,22 +27,27 @@ def trigger_push():
 
 @app.route("/push_hot", methods=["POST"])
 def push_hot_topics():
-    hot_topics = get_hot_topics()
-    message = "\n".join([f"{i+1}. {topic}" for i, topic in enumerate(hot_topics)])
-    line_bot_api.push_message(os.environ.get("LINE_TARGET_ID"), TextSendMessage(text=f"【今日熱門話題】\n{message}"))
-    return "OK"
+    try:
+        hot_topics = get_hot_topics()
+        message = "\n".join([f"{i+1}. {topic}" for i, topic in enumerate(hot_topics)])
+        line_bot_api.push_message(os.environ.get("LINE_TARGET_ID"), TextSendMessage(text=f"【今日熱門話題】\n{message}"))
+        return "OK"
+    except Exception as e:
+        print("❌ 推播失敗：", e)
+        return "Error", 500
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
     signature = request.headers.get("X-Line-Signature")
     body = request.get_data(as_text=True)
+
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
         print("❌ 驗證失敗")
         abort(400)
     except Exception as e:
-        print("❌ webhook 內部錯誤：", str(e))
+        print("❌ webhook 內部錯誤：", e)
         abort(500)
     return "OK"
 
@@ -57,4 +62,4 @@ def handle_message(event):
         else:
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請輸入「今日話題」以取得熱門資訊"))
     except Exception as e:
-        print("❌ 回覆時發生錯誤：", str(e))
+        print("❌ 回覆錯誤：", e)
